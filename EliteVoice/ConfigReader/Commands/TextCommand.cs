@@ -1,43 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SpeechLib;
+﻿using System.Collections.Generic;
 
 namespace EliteVoice.ConfigReader.Commands
 {
-    class TextCommand : AbstractCommand
+    internal class TextCommand : AbstractCommand
     {
-		public override int runCommand(IDictionary<string, Object> parameters)
+        public override int RunCommand(IDictionary<string, object> parameters)
         {
-
-            Speech sp = Speech.instance;
+            var sp = Speech.Instance;
             string text = null;
-            if (getProperties().ContainsKey("select"))
+            if (GetProperties().ContainsKey("select"))
             {
-                string parameter = getProperties()["select"];
+                var parameter = GetProperties()["select"];
                 if (parameters.ContainsKey(parameter))
                 {
                     //text = string.Format("{0:F0}",parameters[parameter]);
-                    text = string.Format("{0:#.##;#.##;0}", parameters[parameter]);
-                    logger.log("Text Select = " + text);
+                    text = $"{parameters[parameter]:#.##;#.##;0}";
+                    Logger.Log("Text Select = " + text);
                 }
             }
-            else if (getProperties().ContainsKey("@text"))
+            else if (GetProperties().ContainsKey("@text"))
             {
-                text = getProperties()["@text"];
+                text = GetProperties()["@text"];
                 //logger.log("Replacers count " + EventContext.instance.replacers.Count);
-                foreach (Replacer rp in EventContext.instance.replacers)
-				{
-					text = rp.Replace(text);
-                }
+                foreach (var rp in EventContext.Instance.Replacers)
+                    text = rp.Replace(text);
             }
 
-            if (text != null && text.Length > 0)
-            {
-                sp.speak(text);
-            }
+            if (!string.IsNullOrEmpty(text))
+                sp.Speak(text);
             return 0;
         }
     }

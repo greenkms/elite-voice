@@ -1,73 +1,65 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading;
 
 namespace EliteVoice.ConfigReader.Commands
 {
-	class StopCommand : AbstractCommand
-	{
-		private string name = null;
-		private int fade = 0;
-		public override void addProperty(string key, string value)
-		{
-			base.addProperty(key, value);
-			switch (key)
-			{
-				case "name":
-					name = value;
-					break;
-				case "fade":
-					fade = Int32.Parse(value);
-					if (fade < 0)
-					{
-						fade = 0;
-					}
-					break;
-			}
-		}
-		public override int runCommand(IDictionary<string, object> parameters)
-		{
-			Thread thread = new Thread(new ThreadStart(this.runThreads));
-			thread.Start();
-			return 0;
-		}
+    internal class StopCommand : AbstractCommand
+    {
+        private int _fade;
+        private string _name;
 
-		private void runThreads()
-		{
-			List<PlayCommand> players = EventContext.instance.getPlayersByName(name);
+        public override void AddProperty(string key, string value)
+        {
+            base.AddProperty(key, value);
+            switch (key)
+            {
+                case "name":
+                    _name = value;
+                    break;
+                case "fade":
+                    _fade = int.Parse(value);
+                    if (_fade < 0)
+                        _fade = 0;
+                    break;
+            }
+        }
 
-			List<Thread> threads = new List<Thread>();
+        public override int RunCommand(IDictionary<string, object> parameters)
+        {
+            var thread = new Thread(RunThreads);
+            thread.Start();
+            return 0;
+        }
 
-			foreach (PlayCommand player in players)
-			{
-				player.fadeMills = fade;
-				Thread thread = new Thread(new ThreadStart(player.fade));
-				threads.Add(thread);
-				thread.Start();
-			}
+        private void RunThreads()
+        {
+            var players = EventContext.Instance.GetPlayersByName(_name);
 
-			bool allStoped = false;
-			while (!allStoped)
-			{
-				allStoped = true;
-				foreach (Thread thread in threads)
-				{
-					if (thread.IsAlive)
-					{
-						allStoped = false;
-						break;
-					}
-				}
-				if (!allStoped)
-				{
-					Thread.Sleep(100);
-				}
-			}
+            var threads = new List<Thread>();
 
-			logger.log("Stop Play Threads");
+            foreach (var player in players)
+            {
+                player.FadeMills = _fade;
+                var thread = new Thread(player.Fade);
+                threads.Add(thread);
+                thread.Start();
+            }
 
-		}
-	}
+            var allStoped = false;
+            while (!allStoped)
+            {
+                allStoped = true;
+                foreach (var thread in threads)
+                    if (thread.IsAlive)
+                    {
+                        allStoped = false;
+                        break;
+                    }
+                if (!allStoped)
+                    Thread.Sleep(100);
+            }
+
+            Logger.Log("Stop Play Threads");
+        }
+    }
 }

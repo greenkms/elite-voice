@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading;
 
 namespace EliteVoice.ConfigReader.Commands
 {
-    class PauseCommand : AbstractCommand
+    internal class PauseCommand : AbstractCommand
     {
-        public override int runCommand(IDictionary<string, Object> parameters)
+        public override int RunCommand(IDictionary<string, object> parameters)
         {
-            if (getProperties().ContainsKey("value"))
+            if (GetProperties().ContainsKey("value"))
             {
-                int val = Int32.Parse(getProperties()["value"]);
+                var val = int.Parse(GetProperties()["value"]);
                 Thread.Sleep(val);
             }
             return 0;

@@ -1,132 +1,110 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
+﻿using System.Collections.Generic;
 using System.IO;
-using NAudio;
+using System.Threading;
 using NAudio.Wave;
 
 namespace EliteVoice.ConfigReader.Commands
 {
-    class PlayCommand : AbstractCommand
+    internal class PlayCommand : AbstractCommand
     {
-		public string name { get; private set; } = null;
-		IWavePlayer waveOutDevice = new WaveOut();
-        AudioFileReader audioFileReader = null;
-        bool async = false;
-        public bool isOpen { get; private set; } = false;
+        private bool _async;
+        private AudioFileReader _audioFileReader;
 
-		public int fadeMills { set; private get; } = 0;
+        private float _volume = 0.5f;
+        private readonly IWavePlayer _waveOutDevice = new WaveOut();
+        public string Name { get; private set; }
+        public bool IsOpen { get; private set; }
 
-        float volume = 0.5f;
+        public int FadeMills { set; private get; }
 
-        private void initializeParameters()
+        private void InitializeParameters()
         {
-
-			if (getProperties().ContainsKey("name"))
-			{
-				name = getProperties()["name"].ToLower();
-			}
+            if (GetProperties().ContainsKey("name"))
+                Name = GetProperties()["name"].ToLower();
 
 
-			if (getProperties().ContainsKey("async"))
+            if (GetProperties().ContainsKey("async"))
+                _async = "true".Equals(GetProperties()["async"]);
+
+            var volume = -1;
+            if (GetProperties().ContainsKey("volume"))
             {
-                async = "true".Equals(getProperties()["async"]);
-            }
-
-            int volume = -1;
-            if (getProperties().ContainsKey("volume"))
-            {
-                volume = Int32.Parse(getProperties()["volume"]);
+                volume = int.Parse(GetProperties()["volume"]);
                 if (volume < 0 || volume > 100)
-                {
                     volume = -1;
-                }
             }
-            if (getProperties().ContainsKey("file"))
+            if (GetProperties().ContainsKey("file"))
             {
-                string filename = getProperties()["file"];
-                logger.log("Try to play file: \"" + filename + "\"");
+                var filename = GetProperties()["file"];
+                Logger.Log("Try to play file: \"" + filename + "\"");
                 if (File.Exists(filename))
                 {
-                    audioFileReader = new AudioFileReader(filename);
+                    _audioFileReader = new AudioFileReader(filename);
                     if (volume > -1)
                     {
-                        this.volume = (float)(volume / 100.0f);
-                        audioFileReader.Volume = this.volume;
+                        _volume = volume / 100.0f;
+                        _audioFileReader.Volume = _volume;
                     }
-                    waveOutDevice.Init(audioFileReader);
-                    waveOutDevice.PlaybackStopped += new EventHandler<StoppedEventArgs>(Player_PlayStateChange);
+                    _waveOutDevice.Init(_audioFileReader);
+                    _waveOutDevice.PlaybackStopped += Player_PlayStateChange;
                 }
                 else
                 {
-                    logger.log("File NOT Found: \"" + filename + "\"!");
+                    Logger.Log("File NOT Found: \"" + filename + "\"!");
                 }
             }
 
-			EventContext.instance.addPlayer(this);
-
+            EventContext.Instance.AddPlayer(this);
         }
 
         private void Player_PlayStateChange(object sender, StoppedEventArgs e)
         {
             //logger.log("Stop Playing");
-            isOpen = false;
+            IsOpen = false;
         }
 
-        public override int runCommand(IDictionary<string, object> parameters)
+        public override int RunCommand(IDictionary<string, object> parameters)
         {
+            if (_audioFileReader == null)
+                InitializeParameters();
+            else
+                _audioFileReader.Position = 0;
 
-            if (audioFileReader == null)
+            if (_audioFileReader != null)
             {
-                initializeParameters();
+                IsOpen = true;
+                _waveOutDevice.Play();
+
+                while (!_async && IsOpen)
+                    Thread.Sleep(500);
+                //logger.log("Continue Playing");
+                //isOpen = false;
             }
-			else
-            {
-                audioFileReader.Position = 0;
-            }
-
-			if (audioFileReader != null) { 
-
-				isOpen = true;
-				waveOutDevice.Play();
-
-				while (!async && isOpen)
-				{
-					Thread.Sleep(500);
-					//logger.log("Continue Playing");
-				}
-				//isOpen = false;
-			}
-			return 0;
-
+            return 0;
         }
 
-		public void fade()
-		{
+        public void Fade()
+        {
+            //logger.log("Open state " + isOpen);
 
-			//logger.log("Open state " + isOpen);
-
-			if (isOpen)
-			{
-				float oldVolume = audioFileReader.Volume;
-				if (fadeMills > 0)
-				{
-					int steps = 10;
-					float volStep = oldVolume / steps;
-					int sleep = 1 + fadeMills / steps;
-					for (int i = 0; i < steps; i++)
-					{
-						audioFileReader.Volume -= volStep;
-						Thread.Sleep(sleep);
-					}
-				}
-				waveOutDevice.Stop();
-				isOpen = false;
-				audioFileReader.Volume = oldVolume;
-			}
-		}
+            if (IsOpen)
+            {
+                var oldVolume = _audioFileReader.Volume;
+                if (FadeMills > 0)
+                {
+                    var steps = 10;
+                    var volStep = oldVolume / steps;
+                    var sleep = 1 + FadeMills / steps;
+                    for (var i = 0; i < steps; i++)
+                    {
+                        _audioFileReader.Volume -= volStep;
+                        Thread.Sleep(sleep);
+                    }
+                }
+                _waveOutDevice.Stop();
+                IsOpen = false;
+                _audioFileReader.Volume = oldVolume;
+            }
+        }
     }
 }

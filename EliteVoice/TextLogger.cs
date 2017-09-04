@@ -1,40 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
-
 
 namespace EliteVoice
 {
-    class TextLogger
+    internal class TextLogger
     {
-        public static TextLogger instance { get; } = new TextLogger();
-
-        public TextBoxBase output { set; get; } = null;
-
         private TextLogger()
         {
-
         }
 
-        public void log(string value)
-        {
-            if (output != null)
-            {
+        public static TextLogger Instance { get; } = new TextLogger();
 
-                if (!output.CheckAccess())
+        public TextBoxBase Output { set; get; }
+
+        public void Log(string value)
+        {
+            if (Output != null)
+                if (!Output.CheckAccess())
                 {
-                    output.Dispatcher.Invoke(new Action<string>(log), value + "\n");
+                    Output.Dispatcher.Invoke(new Action<string>(Log), value + "\n");
                 }
                 else
                 {
-                    output.AppendText(value);
-                    output.AppendText("\n");
+                    Output.AppendText(value);
+                    Output.AppendText("\n");
                 }
-            }
         }
-
     }
 }

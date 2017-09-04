@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace EliteVoice.ConfigReader.Commands
 {
-	class InitCommand: AbstractCommand
-	{
-		public override int runCommand(IDictionary<string, Object> parameters)
-		{
-			runChilds(parameters);
-			return 0;
-		}
-
-	}
+    internal class InitCommand : AbstractCommand
+    {
+        public override int RunCommand(IDictionary<string, object> parameters)
+        {
+            RunChilds(parameters);
+            return 0;
+        }
+    }
 }

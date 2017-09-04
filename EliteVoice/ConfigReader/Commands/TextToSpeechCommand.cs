@@ -1,63 +1,52 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using SpeechLib;
-
 
 namespace EliteVoice.ConfigReader.Commands
 {
-    class TextToSpeechCommand : AbstractCommand
+    internal class TextToSpeechCommand : AbstractCommand
     {
-        public override int runCommand(IDictionary<string, Object> parameters)
+        public override int RunCommand(IDictionary<string, object> parameters)
         {
-            Speech sp = Speech.instance;
+            var sp = Speech.Instance;
 
-			/*
-			 * Store values
-			 */
-			SpObjectToken prevVoice = sp.speech.Voice;
-			int prevVolume = sp.speech.Volume;
-			int prevRate = sp.speech.Rate;
+            /*
+             * Store values
+             */
+            var prevVoice = sp.speech.Voice;
+            var prevVolume = sp.speech.Volume;
+            var prevRate = sp.speech.Rate;
 
 
-			foreach (string key in getProperties().Keys)
+            foreach (var key in GetProperties().Keys)
             {
-                string value = getProperties()[key];
-                switch(key)
+                var value = GetProperties()[key];
+                switch (key)
                 {
                     case "voice":
-                        ISpeechObjectToken voice = sp.getVoice(value);
+                        var voice = sp.GetVoice(value);
                         if (voice != null)
-                        {
-                            sp.speech.Voice = (SpObjectToken)voice;
-                        }
+                            sp.speech.Voice = (SpObjectToken) voice;
                         break;
                     case "volume":
-                        int volume = Int32.Parse(value);
+                        var volume = int.Parse(value);
                         if (volume > -1 && volume < 101)
-                        {
                             sp.speech.Volume = volume;
-                        }
                         break;
                     case "rate":
-                        int rate = Int32.Parse(value);
+                        var rate = int.Parse(value);
                         if (rate > -11 && rate < 11)
-                        {
                             sp.speech.Rate = rate;
-                        }
                         break;
                 }
             }
-            runChilds(parameters);
-			if (commands.Count > 0)
-			{
-				sp.speech.Voice = prevVoice;
-				sp.speech.Volume = prevVolume;
-				sp.speech.Rate = prevRate;
-			}
-			return 0;
+            RunChilds(parameters);
+            if (Commands.Count > 0)
+            {
+                sp.speech.Voice = prevVoice;
+                sp.speech.Volume = prevVolume;
+                sp.speech.Rate = prevRate;
+            }
+            return 0;
         }
     }
 }

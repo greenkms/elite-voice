@@ -1,46 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SpeechLib;
+﻿using SpeechLib;
 
 namespace EliteVoice
 {
-    class Speech
+    internal class Speech
     {
-
-        public static Speech instance { get; } = new Speech();
-        public SpVoice speech { get; } = new SpVoice();
-
-        private ISpeechObjectTokens voices;
+        private readonly ISpeechObjectTokens _voices;
 
         private Speech()
         {
-            voices = speech.GetVoices();
+            _voices = speech.GetVoices();
         }
-        private void setDefaults()
+
+        public static Speech Instance { get; } = new Speech();
+        public SpVoice speech { get; } = new SpVoice();
+
+        private void SetDefaults()
         {
             //speech.Voice = 
         }
 
-        public ISpeechObjectToken getVoice(string name)
+        public ISpeechObjectToken GetVoice(string name)
         {
             ISpeechObjectToken result = null;
 
-            foreach (ISpeechObjectToken voice in voices)
-            {
+            foreach (ISpeechObjectToken voice in _voices)
                 if (voice.GetDescription().Equals(name))
                 {
                     result = voice;
                     break;
                 }
-            }
 
             return result;
         }
 
-        public void speak(string text)
+        public void Speak(string text)
         {
             speech.Speak(text, SpeechVoiceSpeakFlags.SVSFlagsAsync);
             speech.WaitUntilDone(-1);

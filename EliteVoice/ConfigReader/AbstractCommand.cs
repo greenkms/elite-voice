@@ -1,54 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace EliteVoice.ConfigReader
 {
-    abstract class AbstractCommand : ICommand
+    internal abstract class AbstractCommand : ICommand
     {
-        public ICommand parent { protected set; get; } = null;
-        protected LinkedList<ICommand> commands { get; } = new LinkedList<ICommand>();
-        IDictionary<string, string> properties = new Dictionary<string,string>();
+        private readonly IDictionary<string, string> _properties = new Dictionary<string, string>();
 
-        protected TextLogger logger = TextLogger.instance;
+        protected TextLogger Logger = TextLogger.Instance;
+        public ICommand Parent { protected set; get; }
+        protected LinkedList<ICommand> Commands { get; } = new LinkedList<ICommand>();
 
-        public AbstractCommand()
+        public void AddChild(ICommand command)
         {
-        }
-        public void addChild(ICommand command)
-        {
-			((AbstractCommand)command).parent = this;
-			commands.AddLast(command);
+            ((AbstractCommand) command).Parent = this;
+            Commands.AddLast(command);
         }
 
-        public virtual void addProperty(string key, string value)
+        public virtual void AddProperty(string key, string value)
         {
-            properties.Add(key, value);
+            _properties.Add(key, value);
         }
 
-        public LinkedList<ICommand> getChilds()
+        public LinkedList<ICommand> GetChilds()
         {
-            return commands;
+            return Commands;
         }
 
-        public IDictionary<string, string> getProperties()
+        public IDictionary<string, string> GetProperties()
         {
-            return properties;
+            return _properties;
         }
 
-        public abstract int runCommand(IDictionary<string, Object> parameters);
+        public abstract int RunCommand(IDictionary<string, object> parameters);
 
-        protected void runChilds(IDictionary<string, Object> parameters)
+        protected void RunChilds(IDictionary<string, object> parameters)
         {
-            foreach (ICommand command in commands)
-            {
-                if (command.runCommand(parameters) < 0)
-                {
+            foreach (var command in Commands)
+                if (command.RunCommand(parameters) < 0)
                     break;
-                }
-            }
         }
     }
 }

@@ -1,20 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EliteVoice
+﻿namespace EliteVoice
 {
-    class FileDescription
+    internal class FileDescription
     {
-        public string name { set; get; }
-        public string createDate { set; get; }
-
         public FileDescription(string name = "", string createDate = "")
         {
-            this.name = name;
-            this.createDate = createDate;
+            Name = name;
+            CreateDate = createDate;
         }
+
+        public string Name { set; get; }
+        public string CreateDate { set; get; }
     }
 }

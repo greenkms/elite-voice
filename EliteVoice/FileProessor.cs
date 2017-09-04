@@ -1,102 +1,98 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace EliteVoice
 {
-    class FileProcessor
+    internal class FileProcessor
     {
-        private static string homeDir = Environment.ExpandEnvironmentVariables("%USERPROFILE%") + "\\Saved Games\\Frontier Developments\\Elite Dangerous\\";
-        private List<FileDescription> files = null;
-        private StreamReader reader = null;
-        private CommandProcessor processor = null;
-        TextLogger logger = TextLogger.instance;
+        private static readonly string _homeDir = Environment.ExpandEnvironmentVariables("%USERPROFILE%") +
+                                                  "\\Saved Games\\Frontier Developments\\Elite Dangerous\\";
+
+        private readonly List<FileDescription> _files;
+        private readonly TextLogger _logger = TextLogger.Instance;
+        private readonly CommandProcessor _processor;
+        private StreamReader _reader;
 
         public FileProcessor(List<FileDescription> files, CommandProcessor processor)
         {
-            this.files = files;
-            this.processor = processor;
+            _files = files;
+            _processor = processor;
         }
 
-        public void directoryRead()
+        public void DirectoryRead()
         {
-            try { 
-				Regex reg = new Regex("^.*/([^/]+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-				int lastCount = 0;
-				while(true) {
-					string[] filenames = Directory.GetFiles(homeDir, "*.log");
-					if (filenames.Length != lastCount)
-					{
-						files.Clear();
-						List<FileDescription> filesTmp = new List<FileDescription>();
-						foreach (string filename in filenames)
-						{
-							filesTmp.Add(new FileDescription(reg.Replace(filename.Replace('\\', '/'), "$1"), File.GetCreationTime(filename).ToString()));
-						}
-						lastCount = filenames.Length;
-						filesTmp.Sort(compareByCreateTime);
-						filesTmp.ForEach(delegate (FileDescription fd) {
-							files.Add(fd);
-						});
-						/*
-						 * get reader
-						 */
-						bool skip = reader == null;
-						reader = null;
-						string fn = homeDir + files[files.Count - 1].name;
-						logger.log("Using journal file: " + fn);
-						FileStream fs = new FileStream(fn, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-						reader = new StreamReader(fs, System.Text.Encoding.UTF8);
-						if (skip)
-						{
-							reader.ReadToEnd();
-						}
-
-					}
-					Thread.Sleep(1000);
-				}
+            try
+            {
+                var reg = new Regex("^.*/([^/]+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+                var lastCount = 0;
+                while (true)
+                {
+                    var filenames = Directory.GetFiles(_homeDir, "*.log");
+                    if (filenames.Length != lastCount)
+                    {
+                        _files.Clear();
+                        var filesTmp = new List<FileDescription>();
+                        foreach (var filename in filenames)
+                            filesTmp.Add(new FileDescription(reg.Replace(filename.Replace('\\', '/'), "$1"),
+                                File.GetCreationTime(filename).ToString()));
+                        lastCount = filenames.Length;
+                        filesTmp.Sort(CompareByCreateTime);
+                        filesTmp.ForEach(delegate(FileDescription fd) { _files.Add(fd); });
+                        /*
+                         * get reader
+                         */
+                        var skip = _reader == null;
+                        _reader = null;
+                        var fn = _homeDir + _files[_files.Count - 1].Name;
+                        _logger.Log("Using journal file: " + fn);
+                        var fs = new FileStream(fn, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                        _reader = new StreamReader(fs, Encoding.UTF8);
+                        if (skip)
+                            _reader.ReadToEnd();
+                    }
+                    Thread.Sleep(1000);
+                }
             }
             catch (Exception e1)
             {
+                // ignored
             }
         }
 
-        private static int compareByCreateTime(FileDescription a, FileDescription b)
+        private static int CompareByCreateTime(FileDescription a, FileDescription b)
         {
-            return File.GetCreationTime(homeDir + a.name).CompareTo(File.GetCreationTime(homeDir + b.name));
+            return File.GetCreationTime(_homeDir + a.Name).CompareTo(File.GetCreationTime(_homeDir + b.Name));
             //return a.createDate.CompareTo(b.createDate);
         }
 
-        public void processCurrentFile()
+        public void ProcessCurrentFile()
         {
             try
             {
                 while (true)
-            {
-                while (reader == null)
                 {
+                    while (_reader == null)
+                        Thread.Sleep(500);
+
+                    string line;
+
+                    while ((line = _reader.ReadLine()) != null)
+                    {
+                        _logger.Log("Read event line from journal file.");
+                        _processor.Process(line);
+                    }
+
                     Thread.Sleep(500);
                 }
-
-                string line = null;
-
-                while((line = reader.ReadLine()) != null)
-                {
-                    logger.log("Read event line from journal file.");
-                    processor.process(line);
-                }
-
-                Thread.Sleep(500);
-            }
             }
             catch (Exception e1)
             {
+                // ignored
             }
-
         }
     }
 }

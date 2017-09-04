@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace EliteVoice.ConfigReader
 {
-    interface ICommand
+    internal interface ICommand
     {
-        LinkedList<ICommand> getChilds();
-        void addChild(ICommand command);
-        IDictionary<string,string> getProperties();
-        void addProperty(String key, String value);
+        LinkedList<ICommand> GetChilds();
+        void AddChild(ICommand command);
+        IDictionary<string, string> GetProperties();
+        void AddProperty(string key, string value);
 
-        int runCommand(IDictionary<string, Object> parameters);
+        int RunCommand(IDictionary<string, object> parameters);
     }
 }

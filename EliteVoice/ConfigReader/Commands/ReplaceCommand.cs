@@ -1,53 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace EliteVoice.ConfigReader.Commands
 {
-	class ReplaceCommand: AbstractCommand
-	{
-		private string source = null;
+    internal class ReplaceCommand : AbstractCommand
+    {
+        private string _ignorecase;
 
-		private string match = null;
+        private string _match;
 
-		private string ignorecase = null;
+        private string _replace;
+        private string _source;
 
-		private string target = null;
+        private string _target;
 
-		private string replace = null;
-		public override void addProperty(string key, string value)
-		{
-			base.addProperty(key, value);
-			switch (key)
-			{
-				case "source":
-					source = value;
-					break;
-				case "match":
-					match = value;
-					break;
-				case "ignorecase":
-					ignorecase = value;
-					break;
-				case "replace":
-					replace = value;
-					break;
-				case "target":
-					target = value;
-					break;
-			}
-		}
+        public override void AddProperty(string key, string value)
+        {
+            base.AddProperty(key, value);
+            switch (key)
+            {
+                case "source":
+                    _source = value;
+                    break;
+                case "match":
+                    _match = value;
+                    break;
+                case "ignorecase":
+                    _ignorecase = value;
+                    break;
+                case "replace":
+                    _replace = value;
+                    break;
+                case "target":
+                    _target = value;
+                    break;
+            }
+        }
 
-		public override int runCommand(IDictionary<string, object> parameters)
-		{
-			Replacer rp = new Replacer(match, replace, source, target, ignorecase);
-			if (rp.isValid)
-			{
-				EventContext.instance.replacers.Add(rp);
-			}
-			return 0;
-		}
-	}
+        public override int RunCommand(IDictionary<string, object> parameters)
+        {
+            var rp = new Replacer(_match, _replace, _source, _target, _ignorecase);
+            if (rp.IsValid)
+                EventContext.Instance.Replacers.Add(rp);
+            return 0;
+        }
+    }
 }

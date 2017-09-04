@@ -1,27 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EliteVoice.ConfigReader.Commands
 {
-    class RandomizeCommand : AbstractCommand
+    internal class RandomizeCommand : AbstractCommand
     {
-        public override int runCommand(IDictionary<string, object> parameters)
+        public override int RunCommand(IDictionary<string, object> parameters)
         {
-            LinkedList<ICommand> childs = getChilds();
-            LinkedList<int> priority = new LinkedList<int>();
-            int scale = 0;
-            foreach (ICommand child in childs)
+            var childs = GetChilds();
+            var priority = new LinkedList<int>();
+            var scale = 0;
+            foreach (var child in childs)
             {
-                if (child.getProperties().ContainsKey("priority"))
+                if (child.GetProperties().ContainsKey("priority"))
                 {
-                    int pr = Int32.Parse(child.getProperties()["priority"]);
+                    var pr = int.Parse(child.GetProperties()["priority"]);
                     if (pr < 1)
-                    {
                         pr = 1;
-                    }
                     scale += pr;
                 }
                 else
@@ -31,20 +27,18 @@ namespace EliteVoice.ConfigReader.Commands
                 priority.AddLast(scale);
             }
 
-            Random rand = new Random();
+            var rand = new Random();
 
-            int check = rand.Next(scale);
-            int idx = 0;
-            foreach (int pr in priority)
+            var check = rand.Next(scale);
+            var idx = 0;
+            foreach (var pr in priority)
             {
                 if (pr > check)
-                {
                     break;
-                }
                 idx++;
             }
 
-            childs.ElementAt(idx).runCommand(parameters);
+            childs.ElementAt(idx).RunCommand(parameters);
 
             return 0;
         }

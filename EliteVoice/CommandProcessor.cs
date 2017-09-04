@@ -1,61 +1,57 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using EliteVoice.ConfigReader.Commands;
-using EliteVoice.ConfigReader;
-using System.Collections;
 using Newtonsoft.Json;
 
 namespace EliteVoice
 {
-    class CommandProcessor
+    internal class CommandProcessor
     {
+        private readonly ConfigReader.ConfigReader _config;
         //private JavaScriptSerializer json = new JavaScriptSerializer();
 
-        TextLogger logger = TextLogger.instance;
-        EliteVoice.ConfigReader.ConfigReader config = null;
+        private readonly TextLogger _logger = TextLogger.Instance;
 
-        public CommandProcessor(EliteVoice.ConfigReader.ConfigReader config)
+        public CommandProcessor(ConfigReader.ConfigReader config)
         {
-            this.config = config;
-			init();
+            _config = config;
+            Init();
         }
 
-		public void init()
-		{
-			config.init.runCommand(new Dictionary<string, Object>());
-		}
-        public void process(string jsonStr)
+        public void Init()
         {
-            logger.log("Receive json: " + jsonStr);
-            IDictionary<string, Object> values = JsonConvert.DeserializeObject<Dictionary<string, Object>>(jsonStr);
-            if (values.ContainsKey("event")) {
-                string eventName = (string)values["event"];
-                ICommand command = config.getEvent(eventName);
+            _config.Init.RunCommand(new Dictionary<string, object>());
+        }
+
+        public void Process(string jsonStr)
+        {
+            _logger.Log("Receive json: " + jsonStr);
+            IDictionary<string, object> values = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonStr);
+            if (values.ContainsKey("event"))
+            {
+                var eventName = (string) values["event"];
+                var command = _config.GetEvent(eventName);
                 if (command != null)
                 {
-					
-					logger.log("Command successfully found for event: " + eventName);
-					try {
-						foreach (Replacer rp in EventContext.instance.replacers)
-						{
-							rp.Replace(values);
-						}
-					} catch (Exception e)
-					{
-						logger.log("Replace error result: " + e.Message);
-					}
-					command.runCommand(values);
-                } else
-                {
-                    logger.log("No command found for event: " + eventName);
+                    _logger.Log("Command successfully found for event: " + eventName);
+                    try
+                    {
+                        foreach (var rp in EventContext.Instance.Replacers)
+                            rp.Replace(values);
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.Log("Replace error result: " + e.Message);
+                    }
+                    command.RunCommand(values);
                 }
-        }
+                else
+                {
+                    _logger.Log("No command found for event: " + eventName);
+                }
+            }
             else
             {
-                logger.log("No event found!!!");
+                _logger.Log("No event found!!!");
             }
         }
     }
